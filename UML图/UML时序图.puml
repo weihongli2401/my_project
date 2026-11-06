@@ -1,0 +1,73 @@
+@startuml
+title 多人共享记账系统 - 预算申请与审批时序图
+
+skinparam shadowing false
+autonumber
+
+actor 员工 as Employee
+boundary "员工界面" as EmployeeUI
+control "预算服务" as BudgetService
+database "系统数据库" as DB
+control "操作日志服务" as LogService
+actor 老板 as Boss
+boundary "老板界面" as BossUI
+
+== 员工提交预算申请 ==
+
+Employee -> EmployeeUI : 填写预算项目、金额和说明
+Employee -> EmployeeUI : 点击提交申请
+
+EmployeeUI -> BudgetService : submitBudget(application)
+BudgetService -> BudgetService : 校验申请内容与权限
+
+alt 申请内容合法
+    BudgetService -> DB : 保存预算申请(status=待审批)
+    DB --> BudgetService : 保存成功
+
+    BudgetService -> LogService : 记录员工提交操作
+    LogService -> DB : 保存操作日志
+    DB --> LogService : 日志保存成功
+
+    BudgetService --> EmployeeUI : 返回提交成功
+    EmployeeUI --> Employee : 显示申请已提交
+else 申请内容不合法或无权限
+    BudgetService --> EmployeeUI : 返回拒绝结果
+    EmployeeUI --> Employee : 显示错误信息
+end
+
+== 老板审批预算申请 ==
+
+Boss -> BossUI : 打开待审批申请列表
+BossUI -> BudgetService : getPendingApplications()
+BudgetService -> DB : 查询待审批申请
+DB --> BudgetService : 返回申请列表
+BudgetService --> BossUI : 显示申请列表
+
+Boss -> BossUI : 选择申请并作出审批决定
+BossUI -> BudgetService : reviewBudget(applicationId, decision)
+
+BudgetService -> BudgetService : 校验审批权限与申请状态
+
+alt 老板批准
+    BudgetService -> DB : 更新状态为已批准
+    DB --> BudgetService : 更新成功
+
+    BudgetService -> LogService : 记录批准操作
+    LogService -> DB : 保存操作日志
+    DB --> LogService : 日志保存成功
+
+    BudgetService --> BossUI : 返回审批成功
+    BossUI --> Boss : 显示预算已批准
+else 老板驳回
+    BudgetService -> DB : 更新状态为已驳回
+    DB --> BudgetService : 更新成功
+
+    BudgetService -> LogService : 记录驳回操作
+    LogService -> DB : 保存操作日志
+    DB --> LogService : 日志保存成功
+
+    BudgetService --> BossUI : 返回审批成功
+    BossUI --> Boss : 显示预算已驳回
+end
+
+@enduml

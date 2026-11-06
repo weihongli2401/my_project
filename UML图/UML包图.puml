@@ -1,0 +1,80 @@
+@startuml
+title 多人共享记账系统 - 包图
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "用户界面层" as UI {
+    package "登录界面" as LoginUI
+    package "员工工作台" as EmployeeUI
+    package "财务工作台" as FinanceUI
+    package "老板工作台" as BossUI
+}
+
+package "业务服务层" as Service {
+    package "身份与权限管理" as Auth
+    package "预算管理" as Budget
+    package "财务记录管理" as Financial
+    package "异常检查与报告" as Anomaly
+    package "项目管理" as Project
+    package "操作日志管理" as Log
+}
+
+package "数据存储层" as Data {
+    package "用户数据" as UserData
+    package "预算申请数据" as BudgetData
+    package "财务记录数据" as FinancialData
+    package "项目数据" as ProjectData
+    package "操作日志数据" as LogData
+}
+
+' 用户界面依赖业务服务
+LoginUI ..> Auth : 登录认证
+EmployeeUI ..> Auth : 权限校验
+EmployeeUI ..> Budget : 提交预算申请
+EmployeeUI ..> Financial : 查看个人记录
+EmployeeUI ..> Log : 查看个人日志
+
+FinanceUI ..> Auth : 权限校验
+FinanceUI ..> Financial : 查询历史记录
+FinanceUI ..> Anomaly : 检查及报告异常
+FinanceUI ..> Log : 查看全部日志
+
+BossUI ..> Auth : 权限校验
+BossUI ..> Budget : 审批预算申请
+BossUI ..> Financial : 查看全部记录
+BossUI ..> Log : 查看全部日志
+
+' 业务服务依赖数据存储
+Auth ..> UserData : 用户信息
+Budget ..> BudgetData : 申请及审批状态
+Financial ..> FinancialData : 收支记录
+Project ..> ProjectData : 项目信息
+Log ..> LogData : 操作日志
+
+' 业务模块之间的依赖
+Budget ..> Project : 关联项目
+Financial ..> Project : 关联项目
+Budget ..> Log : 记录提交及审批操作
+Financial ..> Log : 记录相关操作
+Anomaly ..> Financial : 检查财务记录
+Anomaly ..> Log : 记录异常检查操作
+
+note right of Budget
+  预算申请由员工提交，
+  由老板审批。
+  财务人员不参与审批。
+end note
+
+note right of Anomaly
+  异常由财务人员人工判断，
+  并向老板报告。
+end note
+
+note bottom of Log
+  操作日志持续保留，
+  不提供删除功能。
+end note
+
+@enduml

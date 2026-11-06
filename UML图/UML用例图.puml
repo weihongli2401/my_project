@@ -1,0 +1,66 @@
+@startuml
+title 多人共享记账系统 - 用例图
+
+left to right direction
+skinparam shadowing false
+
+actor 员工 as Employee
+actor 老板 as Boss
+actor 财务人员 as Finance
+
+rectangle "多人共享记账系统" {
+
+    usecase "登录系统" as UC_Login
+
+    usecase "提交预算申请" as UC_SubmitBudget
+    usecase "查看个人收支记录" as UC_ViewOwnRecords
+    usecase "查看个人操作日志" as UC_ViewOwnLogs
+
+    usecase "查看全部财务记录" as UC_ViewAllRecords
+    usecase "查看全部操作日志" as UC_ViewAllLogs
+
+    usecase "审批预算申请" as UC_ReviewBudget
+    usecase "批准预算" as UC_ApproveBudget
+    usecase "驳回预算" as UC_RejectBudget
+
+    usecase "查看历史财务记录" as UC_History
+    usecase "人工检查财务异常" as UC_InspectAnomaly
+    usecase "向老板报告异常" as UC_ReportAnomaly
+}
+
+Employee --> UC_Login
+Employee --> UC_SubmitBudget
+Employee --> UC_ViewOwnRecords
+Employee --> UC_ViewOwnLogs
+
+Boss --> UC_Login
+Boss --> UC_ViewAllRecords
+Boss --> UC_ViewAllLogs
+Boss --> UC_ReviewBudget
+
+Finance --> UC_Login
+Finance --> UC_ViewAllRecords
+Finance --> UC_ViewAllLogs
+Finance --> UC_History
+Finance --> UC_InspectAnomaly
+Finance --> UC_ReportAnomaly
+
+UC_ReviewBudget ..> UC_ApproveBudget : <<include>>
+UC_ReviewBudget ..> UC_RejectBudget : <<include>>
+
+note right of UC_InspectAnomaly
+  财务人员人工判断异常，
+  不由系统自动作出结论。
+end note
+
+note bottom of UC_ViewAllRecords
+  财务人员和老板可查看全部记录；
+  员工只能查看个人记录。
+end note
+
+note bottom of UC_ReviewBudget
+  预算申请由老板审批，
+  财务人员不具有审批权限。
+end note
+
+@enduml

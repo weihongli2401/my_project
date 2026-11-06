@@ -1,0 +1,120 @@
+@startuml
+title 多人共享记账系统 - 类图
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+
+abstract class User {
+    - userId: String
+    - username: String
+    - passwordHash: String
+    - name: String
+    + login(): Boolean
+    + logout(): void
+}
+
+class Employee {
+    + submitBudget(app: BudgetApplication): Boolean
+    + viewOwnRecords(): List<FinancialRecord>
+    + viewOwnLogs(): List<OperationLog>
+}
+
+class Boss {
+    + viewAllRecords(): List<FinancialRecord>
+    + reviewBudget(app: BudgetApplication): void
+    + viewAllLogs(): List<OperationLog>
+}
+
+class Finance {
+    + viewAllRecords(): List<FinancialRecord>
+    + inspectAnomaly(record: FinancialRecord): void
+    + reportAnomaly(record: FinancialRecord): void
+    + viewAllLogs(): List<OperationLog>
+}
+
+class BudgetApplication {
+    - applicationId: String
+    - applicantId: String
+    - projectId: String
+    - budgetItem: String
+    - amount: Decimal
+    - description: String
+    - status: BudgetStatus
+    - submitTime: DateTime
+    - reviewTime: DateTime
+    - reviewComment: String
+    + submit(): void
+    + approve(comment: String): void
+    + reject(comment: String): void
+}
+
+enum BudgetStatus {
+    Draft
+    Pending
+    Approved
+    Rejected
+}
+
+class FinancialRecord {
+    - recordId: String
+    - ownerId: String
+    - projectId: String
+    - type: RecordType
+    - amount: Decimal
+    - description: String
+    - recordTime: DateTime
+    + getDetails(): String
+}
+
+enum RecordType {
+    Income
+    Expense
+}
+
+class Project {
+    - projectId: String
+    - name: String
+    - grade: Integer
+}
+
+class OperationLog {
+    - logId: String
+    - operatorId: String
+    - operation: String
+    - targetId: String
+    - operationTime: DateTime
+    - detail: String
+}
+
+User <|-- Employee
+User <|-- Boss
+User <|-- Finance
+
+Employee "1" --> "0..*" BudgetApplication : submits
+Boss "1" --> "0..*" BudgetApplication : reviews
+Employee "1" --> "0..*" FinancialRecord : owns
+
+Project "0..1" <-- "0..*" BudgetApplication : related to
+Project "0..1" <-- "0..*" FinancialRecord : related to
+
+User "1" --> "0..*" OperationLog : generates
+
+note right of FinancialRecord
+  Records are retained.
+  No deletion operation is provided.
+end note
+
+note right of OperationLog
+  Logs are retained permanently.
+  Employee can view own logs;
+  Boss and Finance can view all logs.
+end note
+
+note bottom of Finance
+  Finance inspects anomalies manually.
+  Finance does not approve budgets
+  or modify financial records.
+end note
+
+@enduml
